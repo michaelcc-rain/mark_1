@@ -1,0 +1,35 @@
+{
+  "skill_name": "rain-api-auth",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Set up the Rain SDK in my TypeScript project and verify my API key works against sandbox.",
+      "expected_output": "Routes to rain-api-auth. Installs @rainapi/rain-sdk, initializes Rain with apiKey from RAIN_API_KEY and environment 'dev', and runs a companies.list() smoke-test (or scripts/verify-auth.ts).",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I keep getting a 401 from api-dev.raincards.xyz even though my key looks right. Help me debug.",
+      "expected_output": "Routes to rain-api-auth. Walks the 401 decision tree from references/auth-pitfalls.md / error-codes.md: environment mismatch, 'Address invalid for API key' (IP allowlist), truncated/stale key, Api-Key vs Bearer header.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "How do I verify the HMAC signature on a Rain webhook so I know it really came from Rain?",
+      "expected_output": "Routes to rain-api-auth (signature-verification reference). Explains HMAC-SHA256 keyed on the API key value over the JSON body, hex digest compared constant-time to the Signature (and Secondary-Signature) header, and the dual-use-key point. May hand off to rain-managed-authorizations for the receiver/lifecycle.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Create a read-only Rain API key scoped to just transactions, with a 2027 expiry.",
+      "expected_output": "Routes to rain-api-auth (api-key-roles reference). Builds a POST /issuing/keys body with role 'custom' and permissions ['transactionsAndDisputes:read'] (or role 'readonly'), required name + expiresAt, and notes only a primary key can manage keys.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "What's the right way to retry a Rain card-create request so I don't accidentally create two cards?",
+      "expected_output": "Routes to rain-api-auth (idempotency section / examples/idempotent-retry.ts). Explains reusing one Idempotency-Key (<=64 chars UUID) across retries, 24h cache, 5xx not cached (safe to retry) vs 4xx cached, and concurrent-key 429.",
+      "files": []
+    }
+  ]
+}

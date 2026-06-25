@@ -1,0 +1,35 @@
+{
+  "skill_name": "rain-api-generic",
+  "evals": [
+    {
+      "id": "balances-list",
+      "prompt": "Call a Rain endpoint to list the credit balances for a user.",
+      "expected_output": "Routes to rain-api-generic. Runs find_endpoint.py to locate GET /issuing/users/{userId}/balances, inspects it with show_endpoint.py, then calls it with rain_curl.sh (or the SDK client.balances) using the resolved userId. Does NOT guess the path.",
+      "files": ["SKILL.md", "scripts/find_endpoint.py", "scripts/show_endpoint.py", "scripts/rain_curl.sh"]
+    },
+    {
+      "id": "create-custom-key",
+      "prompt": "What Rain endpoint do I call to create a programmatic API key with custom read-only permissions, and what's the request body?",
+      "expected_output": "Routes to rain-api-generic. Locates POST /issuing/keys (createIssuingKey) via find_endpoint.py, shows the body schema (required name + expiresAt; role/permissions), drafts the payload, and confirms before sending. May cross-reference rain-api-auth for key roles.",
+      "files": ["SKILL.md", "scripts/show_endpoint.py"]
+    },
+    {
+      "id": "simulate-authorize",
+      "prompt": "How do I drive a sandbox card authorization against the Rain simulate API?",
+      "expected_output": "Routes to rain-api-generic. Finds POST /simulate/transactions/authorize, notes it is sandbox-only/beta and requires an active card plus funded collateral, and points to rain-managed-authorizations for the spend-webhook lifecycle the simulation triggers.",
+      "files": ["SKILL.md", "scripts/find_endpoint.py"]
+    },
+    {
+      "id": "skip-to-issue-card",
+      "prompt": "Issue a Rain consumer card and decrypt the PAN.",
+      "expected_output": "Does NOT use rain-api-generic. Routes to rain-issue-consumer-card (card issuance + KYC + card-secret decryption is a covered specific skill).",
+      "files": ["SKILL.md"]
+    },
+    {
+      "id": "skip-to-auth-pagination",
+      "prompt": "My Rain list call only returns the first page; how do I paginate through all results?",
+      "expected_output": "Does NOT use rain-api-generic for the mechanics. Routes to rain-api-auth (cursor pagination is a shared building block there). rain-api-generic only reminds that responses are bare arrays and defers the loop to rain-api-auth.",
+      "files": ["SKILL.md"]
+    }
+  ]
+}

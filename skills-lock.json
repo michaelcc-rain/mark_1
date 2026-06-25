@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "rain-api-auth": {
+      "source": "michaelcc-rain/rain-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/rain-api-auth/SKILL.md",
+      "computedHash": "693a55f851916d27b00d5d9c09eecd7216b3cc26d494fc21c371dcc5c0a7d043"
+    },
+    "rain-api-generic": {
+      "source": "michaelcc-rain/rain-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/rain-api-generic/SKILL.md",
+      "computedHash": "2ab38856a2278fb0b271f4992eda864be80e8d4d23040c0b05bb1c4f570320ad"
+    },
+    "rain-issue-consumer-card": {
+      "source": "michaelcc-rain/rain-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/rain-issue-consumer-card/SKILL.md",
+      "computedHash": "685bcc9484e9f31aff960571ddd6f14d202c2a744b8726e98b8bc715912cf1df"
+    },
+    "rain-managed-authorizations": {
+      "source": "michaelcc-rain/rain-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/rain-managed-authorizations/SKILL.md",
+      "computedHash": "bd83befdd8aefbbc581943a343b5d6d79273897cbbb445e5d98473290d797914"
+    }
+  }
+}

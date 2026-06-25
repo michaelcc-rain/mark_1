@@ -1,0 +1,32 @@
+{
+  "id": "2f7d8e90-3142-43a5-f607-182930415263",
+  "resource": "transaction",
+  "action": "completed",
+  "version": "1.2.0",
+  "eventReceivedAt": "2025-01-29T00:05:10.000Z",
+  "body": {
+    "id": "c4e1a3b6-8d9f-40cb-de52-f3a4b5c6d7e8",
+    "type": "spend",
+    "spend": {
+      "amount": 4500,
+      "currency": "USD",
+      "authorizedAmount": 4500,
+      "merchantName": "Parkside Garage",
+      "merchantCity": "Seattle",
+      "merchantCountry": "US",
+      "merchantCategory": "Parking Lots, Garages",
+      "merchantCategoryCode": "7523",
+      "cardId": "card_8f2c1a7b-3e4d-4f56-9a01-2b3c4d5e6f70",
+      "cardType": "physical",
+      "userId": "user_a1b2c3d4-5e6f-7081-9a2b-3c4d5e6f7081",
+      "userFirstName": "Jordan",
+      "userLastName": "Rivera",
+      "userEmail": "jordan@example.com",
+      "status": "completed",
+      "completionReason": "stale_authorization_closure",
+      "authorizedAt": "2025-01-15T08:00:00.000Z",
+      "postedAt": "2025-01-29T00:05:10.000Z",
+      "isForcePosted": false
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "1e6c7d8f-2031-4294-e5f6-071829304152",
+  "resource": "transaction",
+  "action": "completed",
+  "version": "1.3.0",
+  "eventReceivedAt": "2025-01-17T15:24:42.486Z",
+  "body": {
+    "id": "30dcf8c6-a1e5-48f1-9c40-ecffe8253d25",
+    "type": "spend",
+    "spend": {
+      "amount": 8000,
+      "currency": "USD",
+      "authorizedAmount": 10000,
+      "merchantName": "Blue Bottle Coffee",
+      "merchantCity": "San Francisco",
+      "merchantCountry": "US",
+      "merchantCategory": "Eating Places, Restaurants",
+      "merchantCategoryCode": "5812",
+      "cardId": "card_8f2c1a7b-3e4d-4f56-9a01-2b3c4d5e6f70",
+      "cardType": "virtual",
+      "userId": "user_a1b2c3d4-5e6f-7081-9a2b-3c4d5e6f7081",
+      "userFirstName": "Jordan",
+      "userLastName": "Rivera",
+      "userEmail": "jordan@example.com",
+      "status": "completed",
+      "completionReason": "settlement",
+      "authorizedAt": "2025-01-15T10:30:44.000Z",
+      "postedAt": "2025-01-17T15:24:42.486Z",
+      "threeDSecure": false
+    }
+  }
+}

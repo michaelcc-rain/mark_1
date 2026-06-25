@@ -1,0 +1,41 @@
+{
+  "skill_name": "rain-issue-consumer-card",
+  "evals": [
+    {
+      "id": "issue-card-happy-path",
+      "prompt": "I need to onboard a cardholder with Rain and issue them a virtual card end to end — KYC, then the card.",
+      "expected_output": "Routes to rain-issue-consumer-card. Walks through Step 1 create application (POST /issuing/applications/user with the 5 required common fields), Step 2 upload docs, Step 3 await KYC, Step 4 create card (POST /issuing/users/{userId}/cards, limit.amount in cents), Step 5 retrieve + decrypt secrets.",
+      "files": ["SKILL.md", "references/application-fields.md", "references/application-states.md"]
+    },
+    {
+      "id": "decrypt-card-secret",
+      "prompt": "How do I decrypt the encrypted PAN and CVC that Rain returns from GET /issuing/cards/{cardId}/secrets? My decrypted card number has extra garbage characters at the end.",
+      "expected_output": "Routes to rain-issue-consumer-card. Identifies the official Node snippet bug (decrypts over the GCM tag, skips setAuthTag/final), points to the corrected AES-128-GCM decrypt in scripts/decrypt-card-secret and references/card-secret-encryption.md, and explains the SessionId-key-vs-KYC-key distinction.",
+      "files": ["references/card-secret-encryption.md", "scripts/decrypt-card-secret.ts", "references/sessionid-public-keys.md"]
+    },
+    {
+      "id": "scoped-agent-card",
+      "prompt": "I want to give an AI agent a single-use Rain card with a $50 spending cap. Which endpoint and how do I get the card number?",
+      "expected_output": "Routes to rain-issue-consumer-card scoped-cards section. Uses POST /issuing/users/{userId}/cards/scoped (not the deprecated /cards/agentic) with {amountInUSDCents}, the lowercase sessionid header, notes the 1.2x lifetime cap and that the endpoint is gated (403 if not enabled), and decrypts the inline encryptedPan/encryptedCvc.",
+      "files": ["SKILL.md", "examples/issue-scoped-card.ts", "examples/curl/create-scoped-card.sh"]
+    },
+    {
+      "id": "kyc-stuck-needs-verification",
+      "prompt": "My Rain application is stuck in needsVerification. What does that mean and what do I do?",
+      "expected_output": "Routes to rain-issue-consumer-card. Explains the applicationStatus state machine: needsVerification is action-required, redirect the user to applicationCompletionLink (passing all params plus a redirect), do NOT POST documents via the API in that state.",
+      "files": ["references/application-states.md", "SKILL.md"]
+    },
+    {
+      "id": "skip-to-auth",
+      "prompt": "How do I install the Rain SDK and set my Api-Key header?",
+      "expected_output": "Does NOT fully handle here — this is the rain-api-auth skill's job (SDK install/init, Api-Key header, error handling). rain-issue-consumer-card should hand off to rain-api-auth for auth/SDK setup and only own the card-issuance flow.",
+      "files": ["SKILL.md"]
+    },
+    {
+      "id": "skip-to-webhooks",
+      "prompt": "A card is live and I'm receiving Rain transaction.created webhooks — how do I verify the signature and handle the spend lifecycle?",
+      "expected_output": "Routes AWAY to rain-managed-authorizations (webhook receipt, HMAC signature verification, transaction lifecycle). rain-issue-consumer-card covers up to decrypting the card; post-live spend webhooks are out of its scope.",
+      "files": ["SKILL.md"]
+    }
+  ]
+}

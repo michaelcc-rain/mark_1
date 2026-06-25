@@ -1,0 +1,29 @@
+{
+  "id": "6f1d2e3a-7b8c-4d5e-9f01-2a3b4c5d6e7f",
+  "resource": "transaction",
+  "action": "created",
+  "version": "1.1.0",
+  "eventReceivedAt": "2025-01-15T11:05:02.480Z",
+  "body": {
+    "id": "a2c9e1f4-6b7d-48a9-bc30-d1e2f3a4b5c6",
+    "type": "spend",
+    "spend": {
+      "amount": 25000,
+      "currency": "USD",
+      "merchantName": "Acme Electronics",
+      "merchantCity": "Austin",
+      "merchantCountry": "US",
+      "merchantCategory": "Electronics Stores",
+      "merchantCategoryCode": "5732",
+      "cardId": "card_8f2c1a7b-3e4d-4f56-9a01-2b3c4d5e6f70",
+      "cardType": "virtual",
+      "userId": "user_a1b2c3d4-5e6f-7081-9a2b-3c4d5e6f7081",
+      "userFirstName": "Jordan",
+      "userLastName": "Rivera",
+      "userEmail": "jordan@example.com",
+      "status": "declined",
+      "declinedReason": "card spending limit exceeded",
+      "authorizedAt": "2025-01-15T11:05:01.000Z"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "skill_name": "rain-managed-authorizations",
+  "evals": [
+    {
+      "id": "verify-webhook-signature",
+      "prompt": "I'm building the endpoint that receives Rain card spend webhooks. How do I verify the Signature header so I don't process forged events?",
+      "expected_output": "Routes to rain-managed-authorizations. Explains HMAC-SHA256 over the RAW request body keyed on the API key value (the API key doubles as the webhook signing secret), constant-time compare, and accepting Signature or Secondary-Signature. Points to scripts/verify-signature.{js,go,py} and the webhook-receiver examples. May reference rain-api-auth for the shared signature scheme.",
+      "files": ["SKILL.md", "scripts/verify-signature.js", "scripts/verify-signature.py", "scripts/verify-signature.go"]
+    },
+    {
+      "id": "reconcile-lifecycle",
+      "prompt": "Rain sent me a transaction.updated with status reversed and amount 8000 but the original auth was 10000 — did my held funds drop to $80? And when do I actually get the final charge?",
+      "expected_output": "Routes to rain-managed-authorizations. Clarifies amount on updated is the new TOTAL (not a delta), authorizationUpdateAmount is the signed delta (-2000 here), the HOLD IS MAINTAINED until settlement (funds not released), and the final charge arrives as a separate transaction.completed with completionReason settlement. References transaction-lifecycle.md / webhook-payloads.md.",
+      "files": ["SKILL.md", "references/transaction-lifecycle.md", "references/webhook-payloads.md"]
+    },
+    {
+      "id": "cannot-decline-rain-managed",
+      "prompt": "How do I decline a suspicious Rain card transaction in real time when the auth comes in?",
+      "expected_output": "Identifies this as the Rain-Managed vs Partner-Managed boundary. Under Rain-Managed you CANNOT approve/decline — Rain already decided. transaction.requested is NOT delivered in production under Rain-Managed (sandbox-only artifact). Real-time approve/decline (respond 4xx + rejectionCode) is Partner-Managed and out of scope. References rain-vs-partner-managed.md.",
+      "files": ["SKILL.md", "references/rain-vs-partner-managed.md"]
+    },
+    {
+      "id": "duplicate-out-of-order",
+      "prompt": "My Rain webhook handler is processing the same event twice and sometimes an older event arrives after a newer one. How should I handle duplicates and ordering?",
+      "expected_output": "Routes to rain-managed-authorizations. Dedupe on the envelope id (not body.id); order using eventReceivedAt which is OFF by default for spend (enable via account manager); design order-tolerant handlers; explains retry behavior (15 retries, exp backoff 2.5s coeff 3, capped 1 day, up to a week). Points to the webhook-receiver examples.",
+      "files": ["SKILL.md", "examples/webhook-receiver.ts"]
+    },
+    {
+      "id": "test-in-sandbox",
+      "prompt": "How do I trigger a fake Rain card settlement in sandbox to test my webhook receiver end to end?",
+      "expected_output": "Routes to rain-managed-authorizations. Use the beta simulate API (dev only, prod 404): fund collateral, have an active card, POST /simulate/transactions/authorize then /settle. Register the receiver via a public tunnel (loopback blocked). Notes the requested event appears in sandbox and should be ignored, and that simulate HTTP responses use UPPER_CASE enums vs lowercase in delivered webhooks. Points to examples/simulate-lifecycle.sh.",
+      "files": ["SKILL.md", "examples/simulate-lifecycle.sh"]
+    }
+  ]
+}

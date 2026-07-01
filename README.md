@@ -14,6 +14,7 @@ reaches the browser.
 - Node 24, pnpm
 - A **sandbox `RAIN_API_KEY`** for a Rain-Managed consumer tenant (Rain Dashboard → Config,
   `https://www.use-dev.raincards.xyz`)
+  - Tenant config: Consumer Card Program, Rain-managed authorization flow, Rain-managed compliance.
 
 ## Setup
 

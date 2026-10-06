@@ -1,2 +1,9 @@
 allowBuilds:
   sharp: true
+
+# Vendored Rain Wallet SDK (not on npm). Rewritten by scripts/pack-rain-sdk.sh.
+overrides:
+  "@rainxyz/core": "file:vendor/rainxyz-core-eeeef54a.tgz"
+  "@rainxyz/turnkey": "file:vendor/rainxyz-turnkey-9e07e262.tgz"
+  "@rainxyz/wallet": "file:vendor/rainxyz-wallet-da91901e.tgz"
+  "@rainxyz/react": "file:vendor/rainxyz-react-a64edb16.tgz"

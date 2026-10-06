@@ -23,6 +23,8 @@ export async function setUserId(id: string): Promise<void> {
 }
 
 export async function getCardId(): Promise<string | null> {
+  const hardcoded = process.env.RAIN_CARD_ID?.trim();
+  if (hardcoded) return hardcoded;
   return (await cookies()).get(CARD_COOKIE)?.value ?? null;
 }
 

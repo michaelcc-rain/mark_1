@@ -6,9 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sdk:pack": "bash scripts/pack-rain-sdk.sh"
   },
   "dependencies": {
+    "@rainxyz/core": "file:vendor/rainxyz-core-eeeef54a.tgz",
+    "@rainxyz/react": "file:vendor/rainxyz-react-a64edb16.tgz",
+    "@rainxyz/wallet": "file:vendor/rainxyz-wallet-da91901e.tgz",
     "next": "^16.2.9",
     "rain-sdk": "file:../rain-sdk-typescript",
     "react": "^19.2.7",

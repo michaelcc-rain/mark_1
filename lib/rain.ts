@@ -12,6 +12,18 @@ import Rain from "rain-sdk";
  */
 let _client: Rain | null = null;
 
+/**
+ * Which Rain issuing API the server talks to. Defaults to the sandbox because everything in
+ * this demo (the "Approved" auto-approve shortcut, /simulate/*, the embedded wallet's backend)
+ * is sandbox-only. The API key must match: a production key is "Invalid api key" on dev and
+ * vice versa.
+ */
+export type RainEnvironment = "dev" | "production";
+
+export function rainEnvironment(): RainEnvironment {
+  return process.env.RAIN_ENVIRONMENT === "production" ? "production" : "dev";
+}
+
 export function isRainConfigured(): boolean {
   return Boolean(process.env.RAIN_API_KEY);
 }
@@ -23,7 +35,7 @@ export function rain(): Rain {
   if (!_client) {
     _client = new Rain({
       apiKey: process.env.RAIN_API_KEY,
-      environment: "dev", // sandbox: https://api-dev.raincards.xyz/v1/issuing
+      environment: rainEnvironment(), // dev = https://api-dev.raincards.xyz/v1/issuing
     });
   }
   return _client;

@@ -1,6 +1,6 @@
 "use server";
 
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { rain } from "@/lib/rain";
 import { getUserId, setUserId, clearSession } from "@/lib/session";
@@ -20,6 +20,7 @@ export interface KycInput {
   region: string;
   postalCode: string;
   countryCode: string;
+  walletAddress: string;
 }
 
 type KycResult =
@@ -33,13 +34,20 @@ const COUNTRY_NAMES: Record<string, string> = {
   GB: "United Kingdom",
 };
 
-/** Rain-Managed programs need a wallet address per user; sandbox only needs a well-formed one. */
-function randomEvmAddress(): string {
-  return "0x" + randomBytes(20).toString("hex");
-}
+/** The user's EVM wallet address (0x + 40 hex chars). Rain deploys the collateral contract
+ *  with this wallet as owner, so it must be the embedded wallet created in step 1. */
+const EVM_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 
 export async function submitKyc(input: KycInput): Promise<KycResult> {
   try {
+    const walletAddress = input.walletAddress.trim();
+    if (!EVM_ADDRESS.test(walletAddress)) {
+      return {
+        ok: false,
+        error: "Wallet address must be a valid EVM address (0x followed by 40 hex characters).",
+      };
+    }
+
     const client = rain();
     const application = await client.applications.user.create(
       {
@@ -50,8 +58,8 @@ export async function submitKyc(input: KycInput): Promise<KycResult> {
         accountPurpose: "web3Payments",
         expectedMonthlyVolume: "1000-5000",
         isTermsOfServiceAccepted: true,
-        // Rain-Managed: a wallet address is required
-        walletAddress: randomEvmAddress(),
+        // Rain-Managed: the embedded Rain wallet's EVM address (created client-side in step 1)
+        walletAddress,
         // Full-PII variant
         firstName: input.firstName,
         lastName: input.lastName,

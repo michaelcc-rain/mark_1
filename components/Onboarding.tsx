@@ -11,11 +11,17 @@ import {
   needsUserAction,
 } from "@/lib/kyc-status";
 import { Panel, Badge, btn } from "@/components/ui";
+import { WalletStep } from "@/components/WalletStep";
 
-type Phase = "form" | "pending" | "approved" | "rejected" | "action";
+/**
+ * "wallet" precedes "form": the embedded Rain wallet must exist before the application is
+ * created, because Rain deploys the collateral contract against the address registered on
+ * the application.
+ */
+type Phase = "wallet" | "form" | "pending" | "approved" | "rejected" | "action";
 
 function phaseFor(status: ApplicationStatus | null): Phase {
-  if (!status) return "form";
+  if (!status) return "wallet";
   if (isApproved(status)) return "approved";
   if (isTerminalReject(status)) return "rejected";
   if (needsUserAction(status)) return "action";
@@ -37,6 +43,12 @@ const FIELDS = [
   { name: "countryCode", label: "Country", defaultValue: "US", type: "text" },
 ] as const;
 
+/** What step 1 (WalletStep) hands to step 2 (the KYC form). */
+interface WalletInfo {
+  evmAddress: string;
+  email: string;
+}
+
 export function Onboarding({
   hasSession,
   initialStatus,
@@ -46,9 +58,12 @@ export function Onboarding({
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>(
-    initialStatus ? phaseFor(initialStatus) : hasSession ? "pending" : "form",
+    initialStatus ? phaseFor(initialStatus) : hasSession ? "pending" : "wallet",
   );
   const [status, setStatus] = useState<ApplicationStatus | null>(initialStatus);
+  // Set by WalletStep; read in onSubmit. Lives only in this component: nothing server-side
+  // knows about the wallet until the application is created.
+  const [wallet, setWallet] = useState<WalletInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, startSubmit] = useTransition();
   const attempts = useRef(0);
@@ -89,7 +104,15 @@ export function Onboarding({
     e.preventDefault();
     setError(null);
     const fd = new FormData(e.currentTarget);
-    const input = Object.fromEntries(fd.entries()) as unknown as KycInput;
+    // TODO(design): guard the no-wallet case — decide: make "form" unreachable without a
+    // wallet (type the phase so "form" carries the WalletInfo) vs. validate here and bounce
+    // back to the "wallet" phase with an error (the server action also rejects a malformed
+    // address; is a client-side check worth the duplication, or is making the bad state
+    // unrepresentable cleaner?)
+    const input = {
+      ...(Object.fromEntries(fd.entries()) as unknown as Omit<KycInput, "walletAddress">),
+      walletAddress: wallet?.evmAddress ?? "",
+    } satisfies KycInput;
     startSubmit(async () => {
       const r = await submitKyc(input);
       if (!r.ok) {
@@ -99,6 +122,20 @@ export function Onboarding({
       setStatus(r.status);
       setPhase(phaseFor(r.status));
     });
+  }
+
+  if (phase === "wallet") {
+    return (
+      <div className="mx-auto max-w-lg">
+        <OnboardingHeader step={1} />
+        <WalletStep
+          onReady={(w) => {
+            setWallet(w);
+            setPhase("form");
+          }}
+        />
+      </div>
+    );
   }
 
   if (phase !== "form") {
@@ -154,15 +191,7 @@ export function Onboarding({
 
   return (
     <div className="mx-auto max-w-lg">
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          Open your account
-        </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          A few details to run KYC. This is a sandbox — keep the last name as
-          “Approved” for instant approval.
-        </p>
-      </div>
+      <OnboardingHeader step={2} />
       <Panel className="p-6">
         <form onSubmit={onSubmit} className="grid grid-cols-2 gap-4">
           {FIELDS.map((f) => (
@@ -176,7 +205,8 @@ export function Onboarding({
               <input
                 name={f.name}
                 type={f.type}
-                defaultValue={f.defaultValue}
+                // The KYC email defaults to the wallet login email.
+                defaultValue={f.name === "email" && wallet ? wallet.email : f.defaultValue}
                 required
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
               />
@@ -194,6 +224,19 @@ export function Onboarding({
           )}
         </form>
       </Panel>
+    </div>
+  );
+}
+
+function OnboardingHeader({ step }: { step: 1 | 2 }) {
+  return (
+    <div className="mb-6 text-center">
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Open your account</h1>
+      <p className="mt-2 text-sm text-slate-500">
+        {step === 1
+          ? "Step 1 of 2 — create your Rain wallet. It owns the collateral that backs your card."
+          : "Step 2 of 2 — a few details to run KYC. This is a sandbox: keep the last name as “Approved” for instant approval."}
+      </p>
     </div>
   );
 }

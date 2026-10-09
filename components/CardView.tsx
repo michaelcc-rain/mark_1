@@ -31,6 +31,11 @@ export function CardView({ card }: { card: Card }) {
     try {
       // Browser generates the AES secret; it never leaves the client.
       const { sessionId, secretKey } =
+        // TODO(design): pick the SessionId key by environment — decide: pass
+        // `rainEnvironment()` down from the Server Component as a prop vs. expose a
+        // NEXT_PUBLIC_RAIN_ENVIRONMENT var the client reads directly (the server is already
+        // the single source of truth for the environment; is a public env var worth a
+        // second one that can drift from RAIN_ENVIRONMENT?). Until then this is dev-only.
         await generateSessionIdWebCrypto(DEV_SESSIONID_PUBLIC_KEY);
       const res = await fetch("/api/card/secrets", {
         method: "POST",

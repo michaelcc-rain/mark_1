@@ -8,7 +8,7 @@ implement the corrected version — prefer the scripts over re-deriving by hand.
 ## Table of contents
 
 - [Overview](#overview)
-- [Step A — Generate the SessionId (RSA-OAEP, SHA-1)](#step-a--generate-the-sessionid-rsa-oaep-sha-1)
+- [Step A — Generate the SessionId (RSA-OAEP, SHA-512)](#step-a--generate-the-sessionid-rsa-oaep-sha-512)
 - [Step B — Decrypt the secrets (AES-128-GCM)](#step-b--decrypt-the-secrets-aes-128-gcm)
 - [The official Node snippet bug](#the-official-node-snippet-bug)
 - [Why the WebCrypto version is already correct](#why-the-webcrypto-version-is-already-correct)
@@ -38,15 +38,15 @@ that you generated and shared with Rain (encrypted under Rain's RSA public key) 
 3. Rain encrypts the PAN/CVC under AES-128-GCM with that key and returns `{ iv, data }`.
 4. You decrypt locally with the **same** `secretKey` (hex-decoded to the 16-byte AES key).
 
-## Step A — Generate the SessionId (RSA-OAEP, SHA-1)
+## Step A — Generate the SessionId (RSA-OAEP, SHA-512)
 
 1. `secret` = 32 hex chars = 16 random bytes hex-encoded. **Keep it** — you need it for
    decryption. (Default in Rain's docs: `crypto.randomUUID().replace(/-/g, "")`.)
 2. Compute `b64 = base64( hexDecode(secret) )` — i.e. base64 of the 16 raw bytes.
 3. RSA-encrypt the **UTF-8 bytes of the string `b64`** with:
    - padding **RSA-OAEP** (`RSA_PKCS1_OAEP_PADDING`),
-   - OAEP hash **SHA-1** (`oaepHash: 'sha1'` in Node; `hash: "SHA-1"` in WebCrypto),
-   - the **SessionId public key for your environment** (1024-bit; dev vs prod from
+   - OAEP hash **SHA-512** (`oaepHash: 'sha512'` in Node; `hash: "SHA-512"` in WebCrypto),
+   - the **SessionId public key for your environment** (2048-bit; dev vs prod from
      [`sessionid-public-keys.md`](sessionid-public-keys.md)).
 4. The `SessionId` header value = base64 of the RSA ciphertext.
 
@@ -65,7 +65,7 @@ function generateSessionId(pem, secret) {
   const secretKey = secret ?? crypto.randomUUID().replace(/-/g, "");
   const b64 = Buffer.from(secretKey, "hex").toString("base64");       // base64 of 16 raw bytes
   const ciphertext = crypto.publicEncrypt(
-    { key: pem, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING, oaepHash: "sha1" },
+    { key: pem, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING, oaepHash: "sha512" },
     Buffer.from(b64, "utf-8"),                                        // UTF-8 of the base64 STRING
   );
   return { secretKey, sessionId: ciphertext.toString("base64") };
@@ -177,7 +177,7 @@ async function decryptSecretWebCrypto(base64Data, base64Iv, secretKeyHex) {
 ```
 
 The session-id generation has a browser equivalent too (hex→bytes→`btoa`→
-`importKey("spki", …, {name:"RSA-OAEP", hash:"SHA-1"})`→`subtle.encrypt`); see
+`importKey("spki", …, {name:"RSA-OAEP", hash:"SHA-512"})`→`subtle.encrypt`); see
 `scripts/generate-session-id.ts` for both Node and browser paths.
 
 ## Which RSA key — SessionId vs KYC
@@ -185,14 +185,18 @@ The session-id generation has a browser equivalent too (hex→bytes→`btoa`→
 There are **two different Rain RSA keypairs**, and using the wrong one breaks card-secret
 decryption with no clear error:
 
-| Purpose | Key file | Size | SPKI header |
+| Purpose | Docs page | Size | OAEP hash |
 |---|---|---|---|
-| **Card-secret SessionId** (this flow) | `resource-sessionid-keys.mdx` | **1024-bit** | `MIGf…` |
-| KYC request payload encryption (different flow) | `kyc-encryption-public-keys.mdx` | **2048-bit** | `MIIBIjANBgkq…` |
+| **Card-secret SessionId** (this flow) | "SessionId Public Keys (Development and Production)" | **2048-bit** | **SHA-512** |
+| KYC request payload encryption (different flow) | `kyc-encryption-public-keys.mdx` | 2048-bit | (see that page) |
+
+Both keypairs are 2048-bit with the same `MIIBIjANBgkq…` SPKI header, so size does not tell them
+apart. Compare the PEM body against [`sessionid-public-keys.md`](sessionid-public-keys.md). A
+`MIGf…` (1024-bit) key is a legacy SessionId key from before Rain's 2026 rotation — replace it.
 
 For **card-secret decryption and scoped cards, always use the SessionId key** for your
 environment ([`sessionid-public-keys.md`](sessionid-public-keys.md)). Encrypting under the
-2048-bit KYC key means Rain (which holds only the SessionId private key) can't recover your
+KYC key means Rain (which holds only the SessionId private key) can't recover your
 session secret → the AES key it derives is wrong → secrets "decrypt" to garbage with no
 exception. This is the #1 silent failure in this flow.
 

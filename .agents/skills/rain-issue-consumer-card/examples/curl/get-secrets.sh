@@ -5,7 +5,7 @@
 #   ./get-secrets.sh <cardId> [dev|prod]
 #
 # Steps:
-#   1. generate a SessionId (RSA-OAEP+SHA-1 under the SessionId key) — keep the secretKey
+#   1. generate a SessionId (RSA-OAEP+SHA-512 under the SessionId key) — keep the secretKey
 #   2. GET /issuing/cards/{cardId}/secrets with the SessionId header
 #   3. AES-128-GCM decrypt each {iv,data} with the corrected decrypt script
 #

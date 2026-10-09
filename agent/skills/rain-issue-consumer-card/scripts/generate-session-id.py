@@ -1,8 +1,8 @@
 """
 Generate a Rain card-secret `SessionId` header value.
 
-RSA-OAEP, OAEP hash = SHA-1, using the SessionId public key for your environment
-(1024-bit — NOT the 2048-bit KYC key). Returns (secret_key, session_id):
+RSA-OAEP, OAEP hash = SHA-512, using the SessionId public key for your environment
+(2048-bit; NOT the KYC-payload key, which is a different 2048-bit keypair). Returns (secret_key, session_id):
   - session_id : put in the `SessionId` header (get-secrets) or `sessionid` (scoped card)
   - secret_key : KEEP IT — it is the input to decrypt_card_secret.py
 
@@ -20,27 +20,34 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
 # ---------------------------------------------------------------------------
-# SessionId public keys (1024-bit RSA). NOT the KYC keys.
+# SessionId public keys (2048-bit RSA, RSA-OAEP/SHA-512). NOT the KYC keys.
+# Source: Rain docs, "SessionId Public Keys (Development and Production)".
 # ---------------------------------------------------------------------------
 DEV_SESSIONID_PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCAP192809jZyaw62g/eTzJ3P9H
-+RmT88sXUYjQ0K8Bx+rJ83f22+9isKx+lo5UuV8tvOlKwvdDS/pVbzpG7D7NO45c
-0zkLOXwDHZkou8fuj8xhDO5Tq3GzcrabNLRLVz3dkx0znfzGOhnY4lkOMIdKxlQb
-LuVM/dGDC9UpulF+UwIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4LPy3Nlj7AiPUmCxQ2rG
+Vb2PEr36xTz7Zqnoav9e6fWJzR+IPUpQqTerrrfQaNg6xAXhvNVuTbZfRHV0LDtX
+cpco43nhupBMPzWbjIP2C0QlOXxD1NT9p0vuRBPLnT8z3JHnL7fWqx0dx3v6BeFq
+hMo235xR68qLDDjFXIV0FOmI6x1SJS76MwwlAqRHsxSEWJix4WxuK4Z/RrqIuX5J
+O1yRInG4ENBtFbUmc3CO6fVVUpuuSCMwFmFrxQKFcOdWIc2pzN8NDhvlbGRXg2N9
+vX8g1OQt4F6WxX39C917niCksen2lqTWoaR6qoW3JxehivLsnWgfM3vWOrUTaH2L
+OQIDAQAB
 -----END PUBLIC KEY-----"""
 
 PROD_SESSIONID_PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCeZ9uCoxi2XvOw1VmvVLo88TLk
-GE+OO1j3fa8HhYlJZZ7CCIAsaCorrU+ZpD5PUTnmME3DJk+JyY1BB3p8XI+C5uno
-QucrbxFbkM1lgR10ewz/LcuhleG0mrXL/bzUZbeJqI6v3c9bXvLPKlsordPanYBG
-FZkmBPxc8QEdRgH4awIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAowLTDgfW/U8+2dy6Uu8L
+hOnfjaW6YVriYqkmtZMoI86h1xonzf5cJ4BO9ejrdl2kTDtOFiNj7JcMWc35o5x+
+zooA6AmRArl0HQV+Ir7wd5vF91107jKq2f1XB3HQA80UW61VWe1fhpSJwu1ye5k5
+6Eqrgmg1R3ypmXuMVm5897z+w/zCQZ2IOqb3cVbrRdcte6028eUjVGrSVD/ooShg
+Hh7BZ6p0GSzbJ2KbxOM4UfcAo3XCz0/VTnerbPdmHkaGVIElFOnxGXM8wEWueRQQ
+DmdHnDe/o/kuyO5uSUc8fvso2V6iZC9b5PGADU4bbTtuVuUulLky3RwaACWA6q4Q
+cwIDAQAB
 -----END PUBLIC KEY-----"""
 
 
 def generate_session_id(pem: str, secret: str | None = None) -> tuple[str, str]:
     """Return (secret_key_hex, session_id_base64)."""
     if not pem:
-        raise ValueError("pem is required (a SessionId public key, 1024-bit)")
+        raise ValueError("pem is required (a SessionId public key, 2048-bit)")
     if secret is not None and not all(c in "0123456789abcdefABCDEF" for c in secret):
         raise ValueError("secret must be a hex string")
 
@@ -55,8 +62,8 @@ def generate_session_id(pem: str, secret: str | None = None) -> tuple[str, str]:
     ciphertext = public_key.encrypt(
         secret_key_base64,
         padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA1()),
-            algorithm=hashes.SHA1(),
+            mgf=padding.MGF1(algorithm=hashes.SHA512()),
+            algorithm=hashes.SHA512(),
             label=None,
         ),
     )

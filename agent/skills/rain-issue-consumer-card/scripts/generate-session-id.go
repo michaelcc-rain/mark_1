@@ -1,7 +1,7 @@
 // Package cardcrypto generates a Rain card-secret SessionId header value.
 //
-// RSA-OAEP, OAEP hash = SHA-1, using the SessionId public key for your environment
-// (1024-bit — NOT the 2048-bit KYC key). Returns (secretKey, sessionId):
+// RSA-OAEP, OAEP hash = SHA-512, using the SessionId public key for your environment
+// (2048-bit; NOT the KYC-payload key, which is a different 2048-bit keypair). Returns (secretKey, sessionId):
 //   - sessionId : put in the `SessionId` header (get-secrets) or `sessionid` (scoped card)
 //   - secretKey : KEEP IT — it is the input to DecryptSecret (decrypt-card-secret.go)
 //
@@ -11,7 +11,7 @@ package cardcrypto
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha1"
+	"crypto/sha512"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
@@ -20,19 +20,26 @@ import (
 	"regexp"
 )
 
-// SessionId public keys (1024-bit RSA). NOT the KYC keys.
+// SessionId public keys (2048-bit RSA, RSA-OAEP/SHA-512). NOT the KYC keys.
+// Source: Rain docs, "SessionId Public Keys (Development and Production)".
 const DevSessionIDPublicKey = `-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCAP192809jZyaw62g/eTzJ3P9H
-+RmT88sXUYjQ0K8Bx+rJ83f22+9isKx+lo5UuV8tvOlKwvdDS/pVbzpG7D7NO45c
-0zkLOXwDHZkou8fuj8xhDO5Tq3GzcrabNLRLVz3dkx0znfzGOhnY4lkOMIdKxlQb
-LuVM/dGDC9UpulF+UwIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4LPy3Nlj7AiPUmCxQ2rG
+Vb2PEr36xTz7Zqnoav9e6fWJzR+IPUpQqTerrrfQaNg6xAXhvNVuTbZfRHV0LDtX
+cpco43nhupBMPzWbjIP2C0QlOXxD1NT9p0vuRBPLnT8z3JHnL7fWqx0dx3v6BeFq
+hMo235xR68qLDDjFXIV0FOmI6x1SJS76MwwlAqRHsxSEWJix4WxuK4Z/RrqIuX5J
+O1yRInG4ENBtFbUmc3CO6fVVUpuuSCMwFmFrxQKFcOdWIc2pzN8NDhvlbGRXg2N9
+vX8g1OQt4F6WxX39C917niCksen2lqTWoaR6qoW3JxehivLsnWgfM3vWOrUTaH2L
+OQIDAQAB
 -----END PUBLIC KEY-----`
 
 const ProdSessionIDPublicKey = `-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCeZ9uCoxi2XvOw1VmvVLo88TLk
-GE+OO1j3fa8HhYlJZZ7CCIAsaCorrU+ZpD5PUTnmME3DJk+JyY1BB3p8XI+C5uno
-QucrbxFbkM1lgR10ewz/LcuhleG0mrXL/bzUZbeJqI6v3c9bXvLPKlsordPanYBG
-FZkmBPxc8QEdRgH4awIDAQAB
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAowLTDgfW/U8+2dy6Uu8L
+hOnfjaW6YVriYqkmtZMoI86h1xonzf5cJ4BO9ejrdl2kTDtOFiNj7JcMWc35o5x+
+zooA6AmRArl0HQV+Ir7wd5vF91107jKq2f1XB3HQA80UW61VWe1fhpSJwu1ye5k5
+6Eqrgmg1R3ypmXuMVm5897z+w/zCQZ2IOqb3cVbrRdcte6028eUjVGrSVD/ooShg
+Hh7BZ6p0GSzbJ2KbxOM4UfcAo3XCz0/VTnerbPdmHkaGVIElFOnxGXM8wEWueRQQ
+DmdHnDe/o/kuyO5uSUc8fvso2V6iZC9b5PGADU4bbTtuVuUulLky3RwaACWA6q4Q
+cwIDAQAB
 -----END PUBLIC KEY-----`
 
 var hexRe = regexp.MustCompile(`^[0-9A-Fa-f]+$`)
@@ -41,7 +48,7 @@ var hexRe = regexp.MustCompile(`^[0-9A-Fa-f]+$`)
 // Pass secret == "" to generate a fresh random 16-byte (32 hex char) secret.
 func GenerateSessionID(pemStr, secret string) (string, string, error) {
 	if pemStr == "" {
-		return "", "", errors.New("pem is required (a SessionId public key, 1024-bit)")
+		return "", "", errors.New("pem is required (a SessionId public key, 2048-bit)")
 	}
 	if secret != "" && !hexRe.MatchString(secret) {
 		return "", "", errors.New("secret must be a hex string")
@@ -77,7 +84,7 @@ func GenerateSessionID(pemStr, secret string) (string, string, error) {
 		return "", "", errors.New("not an RSA public key")
 	}
 
-	ciphertext, err := rsa.EncryptOAEP(sha1.New(), rand.Reader, pub, secretKeyBase64, nil)
+	ciphertext, err := rsa.EncryptOAEP(sha512.New(), rand.Reader, pub, secretKeyBase64, nil)
 	if err != nil {
 		return "", "", err
 	}

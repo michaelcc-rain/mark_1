@@ -3,8 +3,10 @@
 // exist in the browser. Do NOT add a `node:crypto` import here — it would break
 // the client bundle. Uses the global WebCrypto `crypto` (available in browsers).
 //
-// The DEV SessionId public key (1024-bit RSA) is a public sandbox constant — it
-// is NOT the API key and NOT the KYC key, and is safe to ship to the client.
+// The SessionId public keys (2048-bit RSA, RSA-OAEP with SHA-512) are public constants
+// from the Rain docs page "SessionId Public Keys (Development and Production)". They are
+// NOT the API key and NOT the KYC-payload key (a different 2048-bit keypair), and are safe
+// to ship to the client. Pick the one matching RAIN_ENVIRONMENT; keys are per environment.
 
 export const DEV_SESSIONID_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4LPy3Nlj7AiPUmCxQ2rG
@@ -16,6 +18,16 @@ vX8g1OQt4F6WxX39C917niCksen2lqTWoaR6qoW3JxehivLsnWgfM3vWOrUTaH2L
 OQIDAQAB
 -----END PUBLIC KEY-----`;
 
+export const PROD_SESSIONID_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAowLTDgfW/U8+2dy6Uu8L
+hOnfjaW6YVriYqkmtZMoI86h1xonzf5cJ4BO9ejrdl2kTDtOFiNj7JcMWc35o5x+
+zooA6AmRArl0HQV+Ir7wd5vF91107jKq2f1XB3HQA80UW61VWe1fhpSJwu1ye5k5
+6Eqrgmg1R3ypmXuMVm5897z+w/zCQZ2IOqb3cVbrRdcte6028eUjVGrSVD/ooShg
+Hh7BZ6p0GSzbJ2KbxOM4UfcAo3XCz0/VTnerbPdmHkaGVIElFOnxGXM8wEWueRQQ
+DmdHnDe/o/kuyO5uSUc8fvso2V6iZC9b5PGADU4bbTtuVuUulLky3RwaACWA6q4Q
+cwIDAQAB
+-----END PUBLIC KEY-----`;
+
 export interface SessionId {
   /** 32-char hex string. Keep for AES decryption; never send to the server. */
   secretKey: string;
@@ -23,7 +35,7 @@ export interface SessionId {
   sessionId: string;
 }
 
-/** Generate a SessionId (RSA-OAEP, SHA-1) using a SessionId public key PEM. */
+/** Generate a SessionId (RSA-OAEP, SHA-512) using a SessionId public key PEM. */
 export async function generateSessionIdWebCrypto(
   pem: string,
   secret?: string,
@@ -54,7 +66,7 @@ export async function generateSessionIdWebCrypto(
   const key = await crypto.subtle.importKey(
     "spki",
     der,
-    { name: "RSA-OAEP", hash: "SHA-1" },
+    { name: "RSA-OAEP", hash: "SHA-512" },
     true,
     ["encrypt"],
   );

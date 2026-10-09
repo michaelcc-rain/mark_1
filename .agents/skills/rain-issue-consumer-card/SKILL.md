@@ -65,7 +65,7 @@ client is already initialized.
  └───────────────┬──────────────┘
                  │ cardId
  ┌───────────────▼──────────────┐
- │ Step 5  Retrieve + decrypt    │  generate SessionId (RSA-OAEP+SHA-1)
+ │ Step 5  Retrieve + decrypt    │  generate SessionId (RSA-OAEP+SHA-512)
  │  secrets                       │  → GET /issuing/cards/{cardId}/secrets
  │  (SESSION-ID key, AES-128-GCM)│  → AES-128-GCM decrypt {iv,data}
  └───────────────┬──────────────┘
@@ -379,12 +379,12 @@ body, shipping schema, and per-tier card/velocity limits:
 This is the part agents get wrong. The PAN and CVC are returned **encrypted**; you
 decrypt them client-side with a key only you hold. Two sub-steps:
 
-**(a) Generate a `SessionId`** (RSA-OAEP, hash **SHA-1**) using the
+**(a) Generate a `SessionId`** (RSA-OAEP, hash **SHA-512**) using the
 **SessionId public key for your environment** — dev vs prod, from
 [`references/sessionid-public-keys.md`](references/sessionid-public-keys.md).
 
 > ⚠️ **Use the SessionId key, NOT the KYC-payload key.** They are different keypairs
-> (SessionId = 1024-bit; KYC = 2048-bit). Encrypting with the wrong PEM means Rain
+> (both 2048-bit, so compare the PEM body, not the size). Encrypting with the wrong PEM means Rain
 > can't recover your session secret and the secrets won't decrypt — and it fails
 > *silently* (no clear error). This is the #1 cause of "decryption returns garbage".
 
